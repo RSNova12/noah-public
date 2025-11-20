@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NOAH Health Dashboard</title>
+<style>
+  body{font-family:ui-sans-serif,system-ui,Arial;margin:40px;max-width:900px}
+  .kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:24px 0}
+  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+  .ok{color:#16a34a}.warn{color:#ca8a04}.bad{color:#dc2626}
+</style>
+<h1>NOAH — Health Dashboard</h1>
+<div id="root">Loading…</div>
+<script>
+  async function fetchJSON(p){const r=await fetch(p,{cache:'no-store'});return r.json()}
+  function cls(v){return v>=80?'ok':v>=60?'warn':'bad'}
+  (async ()=>{
+    const [health,cover,owasp,audit]=await Promise.all([
+      fetchJSON('./data/health.json'),
+      fetchJSON('./data/coverage.json'),
+      fetchJSON('./data/owasp.json'),
+      fetchJSON('./data/audit.json')
+    ]);
+    const root=document.getElementById('root');
+    root.innerHTML = `
+      <div class="kpi">
+        <div class="card"><b>Health Score</b><div class="${cls(health.score)}" style="font-size:28px">${health.score}</div></div>
+        <div class="card"><b>Coverage (lines)</b><div style="font-size:28px">${cover?.total?.lines?.pct ?? '—'}%</div></div>
+        <div class="card"><b>OWASP</b><div>High: ${owasp.high} | Medium: ${owasp.medium} | Low: ${owasp.low}</div></div>
+      </div>
+      <div class="card"><b>Audit Hash</b><div><code>${audit.hash ?? '—'}</code></div></div>
+    `;
+    setTimeout(()=>location.reload(), 30000);
+  })();
+</script>
+
